@@ -17,7 +17,7 @@ This project implements a simple 3-tier rule engine application with a user inte
 ## Setup and Installation
 1. Clone the repository:
    
-   git clone https://github.com/Bhaskar9143/ZeoTap-A1-master.git                                                                                                                                                     
+   git clone https://github.com/ysmdhaneef74/rules-main.git                                                                                                                                                
    cd ZeoTap-A1-master
    
 
@@ -93,6 +93,6 @@ Contributions to improve the Rule Engine are welcome. Please follow these steps:
 ## License
 
 ## Contact
-Bhaskar Nagapuri - bhaskarnagapuri5691@gmail.com
+ysmd haneef - ysmdhaneef74@gmail.com
 
-Project Link: https://github.com/Bhaskar9143/ZeoTap-A1-master.git
+Project Link: https://github.com/ysmdhaneef74/rules-main.git
