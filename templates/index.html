@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rule Engine</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --background-color: #ecf0f1;
+            --card-background: #ffffff;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background-color: var(--card-background);
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #addUserBtn {
+            background-color: var(--secondary-color);
+            margin-top: 20px;
+        }
+
+        #addUserBtn:hover {
+            background-color: #34495e;
+        }
+
+        #addUserForm {
+            display: none;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rule Engine</h1>
+    <div class="container">
+        <div class="section">
+            <h2>Check Eligibility</h2>
+            <input type="text" id="rule" placeholder="age > Num">
+            <div id="ruleError" class="error"></div>
+            <input type="number" id="check_age" placeholder="Age">
+            <input type="text" id="check_department" placeholder="Department">
+            <input type="number" id="check_income" placeholder="Income">
+            <input type="number" id="check_spend" placeholder="Spend">
+            <div id="dataError" class="error"></div>
+            <button onclick="checkEligibility()">Check Eligibility</button>
+        </div>
+
+        <button id="addUserBtn" onclick="toggleAddUserForm()">Add New User</button>
+
+        <div id="addUserForm" class="section">
+            <h2>Add User</h2>
+            <input type="text" id="name" placeholder="Name">
+            <input type="number" id="age" placeholder="Age">
+            <input type="text" id="department" placeholder="Department">
+            <input type="number" id="income" placeholder="Income">
+            <input type="number" id="spend" placeholder="Spend">
+            <div id="addUserError" class="error"></div>
+            <button onclick="addUser()">Add User</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleAddUserForm() {
+            const form = document.getElementById("addUserForm");
+            form.style.display = form.style.display === "none" ? "block" : "none";
+        }
+
+        function validateRule(rule) {
+            // Basic rule validation
+            const validOperators = ['AND', 'OR', '>', '<', '=', '>=', '<='];
+            const tokens = rule.split(/\s+/);
+            let hasOperator = false;
+
+            for (let token of tokens) {
+                if (validOperators.includes(token.toUpperCase())) {
+                    hasOperator = true;
+                    break;
+                }
+            }
+
+            if (!hasOperator) {
+                throw new Error("Invalid rule: missing operator");
+            }
+
+            // You can add more specific validations here
+        }
+
+        function validateUserData(data) {
+            if (isNaN(data.age) || data.age <= 0) {
+                throw new Error("Invalid age");
+            }
+            if (!data.department.trim()) {
+                throw new Error("Department is required");
+            }
+            if (isNaN(data.income) || data.income < 0) {
+                throw new Error("Invalid income");
+            }
+            if (isNaN(data.spend) || data.spend < 0) {
+                throw new Error("Invalid spend");
+            }
+        }
+
+        async function addUser() {
+            const errorElement = document.getElementById("addUserError");
+            errorElement.textContent = "";
+
+            try {
+                const user = {
+                    name: document.getElementById("name").value,
+                    age: parseInt(document.getElementById("age").value),
+                    department: document.getElementById("department").value,
+                    income: parseFloat(document.getElementById("income").value),
+                    spend: parseFloat(document.getElementById("spend").value)
+                };
+
+                validateUserData(user);
+
+                const response = await fetch('/add_user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(user)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || "Failed to add user");
+                }
+
+                alert(result.message);
+            } catch (error) {
+                errorElement.textContent = error.message;
+            }
+        }
+
+        async function checkEligibility() {
+            const ruleErrorElement = document.getElementById("ruleError");
+            const dataErrorElement = document.getElementById("dataError");
+            ruleErrorElement.textContent = "";
+            dataErrorElement.textContent = "";
+
+            try {
+                const rule = document.getElementById("rule").value;
+                validateRule(rule);
+
+                const user = {
+                    age: parseInt(document.getElementById("check_age").value),
+                    department: document.getElementById("check_department").value,
+                    income: parseFloat(document.getElementById("check_income").value),
+                    spend: parseFloat(document.getElementById("check_spend").value)
+                };
+
+                validateUserData(user);
+
+                const response = await fetch('/check_eligibility', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ rule, ...user })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || "Failed to check eligibility");
+                }
+
+                alert('Eligibility: ' + result.eligible);
+            } catch (error) {
+                if (error.message.includes("rule")) {
+                    ruleErrorElement.textContent = error.message;
+                } else {
+                    dataErrorElement.textContent = error.message;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
